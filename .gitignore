@@ -1,2 +1,76 @@
+# .gitignore for Othello AI Battle (Python + Flask)
+# See https://github.com/github/gitignore for templates
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+eggs/
+*.egg-info/
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+htmlcov/
+.tox/
+
+# Flask instance folder and local config
+instance/
+*.db
+*.sqlite3
+.flaskenv
+.env
+.env.*
+
+# Editor directories and files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Type checking caches
+.mypy_cache/
+.pyre/
+.pytype/
+
+# Misc
+*.prof
+celerybeat-schedule
+
+# Node / frontend build artifacts (if any are added in future)
+node_modules/
+npm-debug.log*
