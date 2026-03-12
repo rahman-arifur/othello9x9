@@ -1,5 +1,4 @@
 # algorithms/heuristic.py
-# Student 1 responsibility
 # Informed Search: positional heuristic that scores the board for White AI.
 #
 # The evaluation gives higher scores to more strategically valuable positions.
