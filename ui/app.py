@@ -1,7 +1,4 @@
 # ui/app.py
-# Student 1 responsibility (Flask routes + frontend integration)
-# Student 2 responsibility (human move backend route)
-#
 # Flask web server. Manages game sessions and exposes all API endpoints
 # that the browser calls via JavaScript.
 
