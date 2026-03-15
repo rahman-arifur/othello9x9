@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Othello AI Battle – Menu</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="menu-body">
+
+  <div class="menu-container">
+    <h1 class="game-title">♟ Othello AI Battle</h1>
+    <p class="game-subtitle">9×9 Board · Two AI Agents</p>
+
+    <!-- ── MODE SELECTION ── -->
+    <div class="section-label">Select Game Mode</div>
+    <div class="mode-buttons">
+      <button class="mode-btn" data-mode="ai_vs_ai" onclick="selectMode(this)">
+        🤖 AI1 vs AI2
+      </button>
+      <button class="mode-btn" data-mode="human_vs_ai1" onclick="selectMode(this)">
+        👤 Human vs AI1
+      </button>
+      <button class="mode-btn" data-mode="human_vs_ai2" onclick="selectMode(this)">
+        👤 Human vs AI2
+      </button>
+    </div>
+
+    <!-- ── COLOR PICKER (only visible in human modes) ── -->
+    <div id="color-picker" class="color-picker hidden">
+      <div class="section-label">Choose Your Color</div>
+      <div class="color-buttons">
+        <button class="color-btn selected" data-color="1" onclick="selectColor(this)">
+          ⚫ Play as Black
+        </button>
+        <button class="color-btn" data-color="2" onclick="selectColor(this)">
+          ⚪ Play as White
+        </button>
+      </div>
+    </div>
+
+    <!-- ── SPEED CONTROL ── -->
+    <div class="section-label">AI Move Speed</div>
+    <div class="speed-control">
+      <span class="speed-label">Fast (0.5s)</span>
+      <input
+        type="range"
+        id="speed-slider"
+        min="0.5"
+        max="5"
+        step="0.5"
+        value="2"
+        oninput="updateSpeedLabel(this.value)"
+      />
+      <span class="speed-label">Slow (5s)</span>
+    </div>
+    <div class="speed-display">Delay: <span id="speed-value">2.0</span>s per move</div>
+
+    <!-- ── START BUTTON ── -->
+    <button class="start-btn" id="start-btn" onclick="startGame()" disabled>
+      ▶ Start Game
+    </button>
+  </div>
+
+  <script>
+    let selectedMode = null;
+    let selectedColor = 1; // default: BLACK
+
+    function selectMode(btn) {
+      // Deselect all mode buttons
+      document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedMode = btn.dataset.mode;
+
+      // Show color picker only for human modes
+      const picker = document.getElementById("color-picker");
+      if (selectedMode === "ai_vs_ai") {
+        picker.classList.add("hidden");
+      } else {
+        picker.classList.remove("hidden");
+      }
+
+      document.getElementById("start-btn").disabled = false;
+    }
+
+    function selectColor(btn) {
+      document.querySelectorAll(".color-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      selectedColor = parseInt(btn.dataset.color);
+    }
+
+    function updateSpeedLabel(val) {
+      document.getElementById("speed-value").textContent = parseFloat(val).toFixed(1);
+    }
+
+    function startGame() {
+      if (!selectedMode) return;
+      const delay = parseFloat(document.getElementById("speed-slider").value);
+
+      // POST config to the server, then navigate to the game page
+      fetch("/api/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: selectedMode,
+          human_color: selectedColor,
+          delay: delay,
+        }),
+      })
+      .then(r => r.json())
+      .then(() => {
+        window.location.href = "/game";
+      })
+      .catch(err => console.error("Failed to start game:", err));
+    }
+  </script>
+</body>
+</html>
