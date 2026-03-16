@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Othello AI Battle – Game</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="game-body">
+
+  <!-- ── TOP BAR ── -->
+  <div class="top-bar">
+    <h1 class="game-title-small">♟ Othello AI Battle</h1>
+    <div class="top-actions">
+      <button class="nav-btn" onclick="restartGame()">↩ Restart</button>
+      <button class="nav-btn" onclick="window.location.href='/'">☰ Menu</button>
+    </div>
+  </div>
+
+  <!-- ── STATUS PANEL ── -->
+  <div class="status-panel">
+    <div class="score-box black-score">
+      ⚫ Black: <span id="score-black">2</span>
+    </div>
+    <div class="turn-indicator" id="turn-display">Loading…</div>
+    <div class="score-box white-score">
+      ⚪ White: <span id="score-white">2</span>
+    </div>
+  </div>
+
+  <!-- ── WINNER BANNER (hidden until game ends) ── -->
+  <div id="winner-banner" class="winner-banner hidden"></div>
+
+  <!-- ── BOARD ── -->
+  <div class="board-wrapper">
+    <!-- Column labels -->
+    <div class="board-labels-row">
+      <div class="corner-spacer"></div>
+      <div class="col-label">0</div><div class="col-label">1</div>
+      <div class="col-label">2</div><div class="col-label">3</div>
+      <div class="col-label">4</div><div class="col-label">5</div>
+      <div class="col-label">6</div><div class="col-label">7</div>
+      <div class="col-label">8</div>
+    </div>
+
+    <div class="board-main-row">
+      <!-- Row labels -->
+      <div class="row-labels">
+        <div class="row-label">0</div><div class="row-label">1</div>
+        <div class="row-label">2</div><div class="row-label">3</div>
+        <div class="row-label">4</div><div class="row-label">5</div>
+        <div class="row-label">6</div><div class="row-label">7</div>
+        <div class="row-label">8</div>
+      </div>
+
+      <!-- The 9x9 board grid -->
+      <div class="board" id="board"></div>
+    </div>
+  </div>
+
+  <!-- ── MODE INDICATOR ── -->
+  <div class="mode-tag" id="mode-tag"></div>
+
+  <script>
+    // ──────────────────────────────────────────────
+    // Constants matching Python values
+    const EMPTY = 0, BLACK = 1, WHITE = 2;
+
+    // Game state
+    let config = null;
+    let isHumanTurn = false;
+    let gameOver = false;
+    let aiLoopTimeout = null;
+
+    // ──────────────────────────────────────────────
+    // Bootstrap: load current state from server
+    fetchState();
+
+    function fetchState() {
+      fetch("/api/state")
+        .then(r => r.json())
+        .then(state => {
+          if (state.error) {
+            // No game started – redirect to menu
+            window.location.href = "/";
+            return;
+          }
+          config = state.config;
+          updateUI(state);
+          scheduleNextAction(state);
+        })
+        .catch(err => console.error("fetchState error:", err));
+    }
+
+    // ──────────────────────────────────────────────
+    // Decide what to do next based on game state
+    function scheduleNextAction(state) {
+      if (state.game_over) {
+        showWinner(state.winner);
+        return;
+      }
+
+      const humanColor = config ? config.human_color : null;
+      const mode = config ? config.mode : "ai_vs_ai";
+      const delay = config ? config.delay * 1000 : 2000;
+
+      // Determine if the current turn belongs to a human
+      const humanIsPlaying = (mode !== "ai_vs_ai");
+      const currentIsHuman = humanIsPlaying && (state.current_color === humanColor);
+
+      if (currentIsHuman) {
+        // Human's turn – wait for a board click
+        isHumanTurn = true;
+        setTurnDisplay("Your Turn", state.current_color);
+      } else {
+        // AI's turn – wait `delay` ms then fire the AI move
+        isHumanTurn = false;
+        clearTimeout(aiLoopTimeout);
+        aiLoopTimeout = setTimeout(triggerAIMove, delay);
+      }
+    }
+
+    // ──────────────────────────────────────────────
+    // Ask the server to compute and apply one AI move
+    function triggerAIMove() {
+      fetch("/api/ai_move", { method: "POST" })
+        .then(r => r.json())
+        .then(state => {
+          config = state.config;
+          updateUI(state);
+          scheduleNextAction(state);
+        })
+        .catch(err => console.error("AI move error:", err));
+    }
+
+    // ──────────────────────────────────────────────
+    // Called when the human clicks a cell
+    function humanClick(row, col) {
+      if (!isHumanTurn || gameOver) return;
+
+      fetch("/api/human_move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ row, col }),
+      })
+      .then(r => r.json())
+      .then(state => {
+        if (state.error) {
+          // Invalid move – flash the cell
+          flashInvalidCell(row, col);
+          return;
+        }
+        config = state.config;
+        isHumanTurn = false;
+        updateUI(state);
+        scheduleNextAction(state);
+      })
+      .catch(err => console.error("Human move error:", err));
+    }
+
+    // ──────────────────────────────────────────────
+    // Render the board and scores from server state
+    function updateUI(state) {
+      gameOver = state.game_over;
+      renderBoard(state.board, state.valid_moves, state.current_color, state.last_move, state.last_move_color);
+      document.getElementById("score-black").textContent = state.scores.black;
+      document.getElementById("score-white").textContent = state.scores.white;
+
+      const mode = config ? config.mode : "ai_vs_ai";
+      const humanColor = config ? config.human_color : null;
+      const currentIsHuman = (mode !== "ai_vs_ai") && (state.current_color === humanColor);
+
+      if (!state.game_over) {
+        if (currentIsHuman) {
+          setTurnDisplay("Your Turn ▼", state.current_color);
+        } else {
+          const label = state.current_color === BLACK ? "Black (AI2)" : "White (AI1)";
+          setTurnDisplay(label + " thinking…", state.current_color);
+        }
+      }
+
+      // Mode tag
+      const modeNames = {
+        ai_vs_ai: "AI1 vs AI2",
+        human_vs_ai1: "Human vs AI1",
+        human_vs_ai2: "Human vs AI2",
+      };
+      const el = document.getElementById("mode-tag");
+      if (el && config) el.textContent = "Mode: " + (modeNames[config.mode] || config.mode);
+    }
+
+    function renderBoard(grid, validMoves, currentColor, lastMove, lastMoveColor) {
+      const board = document.getElementById("board");
+      board.innerHTML = "";
+
+      const validSet = new Set(validMoves.map(([r, c]) => r + "," + c));
+      const humanColor = config ? config.human_color : null;
+      const mode = config ? config.mode : "ai_vs_ai";
+      const currentIsHuman = (mode !== "ai_vs_ai") && (currentColor === humanColor);
+      const lastKey = lastMove ? lastMove[0] + "," + lastMove[1] : null;
+
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+
+          const piece = grid[r][c];
+          if (piece === BLACK) {
+            cell.innerHTML = '<div class="piece black-piece"></div>';
+          } else if (piece === WHITE) {
+            cell.innerHTML = '<div class="piece white-piece"></div>';
+          }
+
+          // Highlight valid moves only when it's the human's turn
+          if (currentIsHuman && validSet.has(r + "," + c) && !gameOver) {
+            cell.classList.add("valid-move");
+            cell.onclick = () => humanClick(r, c);
+          }
+
+          // Mark the last move with a glowing dot indicator
+          if (lastKey && r + "," + c === lastKey) {
+            cell.classList.add("last-move");
+            // Tooltip showing who played there
+            const who = lastMoveColor === BLACK ? "Black" : "White";
+            cell.title = who + " played here";
+          }
+
+          board.appendChild(cell);
+        }
+      }
+    }
+
+    function setTurnDisplay(text, color) {
+      const el = document.getElementById("turn-display");
+      el.textContent = text;
+      el.className = "turn-indicator " + (color === BLACK ? "turn-black" : "turn-white");
+    }
+
+    function showWinner(winnerColor) {
+      const banner = document.getElementById("winner-banner");
+      const name = winnerColor === BLACK ? "⚫ Black" : "⚪ White";
+      banner.textContent = "🏆 " + name + " Wins!";
+      banner.className = "winner-banner " + (winnerColor === BLACK ? "win-black" : "win-white");
+      banner.classList.remove("hidden");
+      setTurnDisplay("Game Over", winnerColor);
+    }
+
+    function flashInvalidCell(row, col) {
+      // Briefly flash red to signal invalid click
+      const cells = document.querySelectorAll(".cell");
+      const idx = row * 9 + col;
+      if (cells[idx]) {
+        cells[idx].classList.add("invalid-flash");
+        setTimeout(() => cells[idx].classList.remove("invalid-flash"), 500);
+      }
+    }
+
+    // ──────────────────────────────────────────────
+    // Restart with same settings
+    function restartGame() {
+      clearTimeout(aiLoopTimeout);
+      isHumanTurn = false;
+      gameOver = false;
+      document.getElementById("winner-banner").classList.add("hidden");
+
+      fetch("/api/restart", { method: "POST" })
+        .then(r => r.json())
+        .then(state => {
+          config = state.config;
+          updateUI(state);
+          scheduleNextAction(state);
+        })
+        .catch(err => console.error("Restart error:", err));
+    }
+  </script>
+</body>
+</html>
