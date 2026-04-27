@@ -7,62 +7,112 @@
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body class="game-body">
-
-  <!-- ── TOP BAR ── -->
-  <div class="top-bar">
-    <h1 class="game-title-small">♟ Othello AI Battle</h1>
-    <div class="top-actions">
-      <button class="nav-btn" onclick="restartGame()">↩ Restart</button>
-      <button class="nav-btn" onclick="window.location.href='/'">☰ Menu</button>
-    </div>
-  </div>
-
-  <!-- ── STATUS PANEL ── -->
-  <div class="status-panel">
-    <div class="score-box black-score">
-      ⚫ Black: <span id="score-black">2</span>
-    </div>
-    <div class="turn-indicator" id="turn-display">Loading…</div>
-    <div class="score-box white-score">
-      ⚪ White: <span id="score-white">2</span>
-    </div>
-  </div>
-
-  <!-- ── WINNER BANNER (hidden until game ends) ── -->
-  <div id="winner-banner" class="winner-banner hidden"></div>
-
-  <!-- ── BOARD ── -->
-  <div class="board-wrapper">
-    <!-- Column labels -->
-    <div class="board-labels-row">
-      <div class="corner-spacer"></div>
-      <div class="col-label">0</div><div class="col-label">1</div>
-      <div class="col-label">2</div><div class="col-label">3</div>
-      <div class="col-label">4</div><div class="col-label">5</div>
-      <div class="col-label">6</div><div class="col-label">7</div>
-      <div class="col-label">8</div>
-    </div>
-
-    <div class="board-main-row">
-      <!-- Row labels -->
-      <div class="row-labels">
-        <div class="row-label">0</div><div class="row-label">1</div>
-        <div class="row-label">2</div><div class="row-label">3</div>
-        <div class="row-label">4</div><div class="row-label">5</div>
-        <div class="row-label">6</div><div class="row-label">7</div>
-        <div class="row-label">8</div>
+  <main class="game-shell">
+    <header class="top-bar">
+      <div>
+        <p class="eyebrow">Live Match</p>
+        <h1 class="game-title-small">Othello AI Battle</h1>
       </div>
+      <div class="top-actions">
+        <button class="nav-btn primary-action" onclick="restartGame()">Restart</button>
+        <button class="nav-btn" onclick="window.location.href='/'">Menu</button>
+      </div>
+    </header>
 
-      <!-- The 9x9 board grid -->
-      <div class="board" id="board"></div>
-    </div>
-  </div>
+    <section class="game-layout" aria-label="Othello game area">
+      <aside class="player-panel" aria-label="Black player information">
+        <div class="player-card black-card" id="black-card">
+          <div class="player-meta">
+            <span class="player-disc black-disc"></span>
+            <div>
+              <span class="player-label">Black</span>
+              <strong id="black-player-name">AI2</strong>
+            </div>
+          </div>
+          <div class="score-number" id="score-black">2</div>
+        </div>
 
-  <!-- ── MODE INDICATOR ── -->
-  <div class="mode-tag" id="mode-tag"></div>
+        <div class="info-card compact-card">
+          <span>Move hints</span>
+          <strong id="valid-count">0</strong>
+        </div>
+        <div class="info-card compact-card">
+          <span>Board filled</span>
+          <strong id="filled-count">4 / 81</strong>
+        </div>
+      </aside>
+
+      <section class="board-stage">
+        <div id="winner-banner" class="winner-banner hidden"></div>
+
+        <div class="match-status-card">
+          <div class="turn-indicator" id="turn-display">Loading match…</div>
+          <div class="score-track" aria-hidden="true">
+            <div class="score-fill black-fill" id="black-fill"></div>
+            <div class="score-fill white-fill" id="white-fill"></div>
+          </div>
+          <p class="score-summary" id="score-summary">Black 2 · White 2</p>
+        </div>
+
+        <div class="board-card">
+          <div class="board-wrapper">
+            <div class="board-labels-row" aria-hidden="true">
+              <div class="corner-spacer"></div>
+              <div class="col-label">0</div><div class="col-label">1</div>
+              <div class="col-label">2</div><div class="col-label">3</div>
+              <div class="col-label">4</div><div class="col-label">5</div>
+              <div class="col-label">6</div><div class="col-label">7</div>
+              <div class="col-label">8</div>
+            </div>
+
+            <div class="board-main-row">
+              <div class="row-labels" aria-hidden="true">
+                <div class="row-label">0</div><div class="row-label">1</div>
+                <div class="row-label">2</div><div class="row-label">3</div>
+                <div class="row-label">4</div><div class="row-label">5</div>
+                <div class="row-label">6</div><div class="row-label">7</div>
+                <div class="row-label">8</div>
+              </div>
+
+              <div class="board" id="board" role="grid" aria-label="9 by 9 Othello board"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="board-help" id="board-help">Valid moves appear as green dots when it is your turn.</div>
+      </section>
+
+      <aside class="match-panel" aria-label="White player and match details">
+        <div class="player-card white-card" id="white-card">
+          <div class="player-meta">
+            <span class="player-disc white-disc"></span>
+            <div>
+              <span class="player-label">White</span>
+              <strong id="white-player-name">AI1</strong>
+            </div>
+          </div>
+          <div class="score-number" id="score-white">2</div>
+        </div>
+
+        <div class="info-card">
+          <span>Game Mode</span>
+          <strong id="mode-tag">Loading…</strong>
+        </div>
+        <div class="info-card">
+          <span>AI Delay</span>
+          <strong id="delay-tag">2.0s</strong>
+        </div>
+        <div class="info-card last-move-card">
+          <span>Last Move</span>
+          <strong id="last-move-text">No moves yet</strong>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    // ──────────────────────────────────────────────
     // Constants matching Python values
     const EMPTY = 0, BLACK = 1, WHITE = 2;
 
@@ -71,9 +121,9 @@
     let isHumanTurn = false;
     let gameOver = false;
     let aiLoopTimeout = null;
+    let boardCells = [];
+    let previousGrid = null;
 
-    // ──────────────────────────────────────────────
-    // Bootstrap: load current state from server
     fetchState();
 
     function fetchState() {
@@ -81,7 +131,6 @@
         .then(r => r.json())
         .then(state => {
           if (state.error) {
-            // No game started – redirect to menu
             window.location.href = "/";
             return;
           }
@@ -89,12 +138,15 @@
           updateUI(state);
           scheduleNextAction(state);
         })
-        .catch(err => console.error("fetchState error:", err));
+        .catch(err => {
+          console.error("fetchState error:", err);
+          showToast("Could not load the match state.");
+        });
     }
 
-    // ──────────────────────────────────────────────
-    // Decide what to do next based on game state
     function scheduleNextAction(state) {
+      clearTimeout(aiLoopTimeout);
+
       if (state.game_over) {
         showWinner(state.winner);
         return;
@@ -103,25 +155,22 @@
       const humanColor = config ? config.human_color : null;
       const mode = config ? config.mode : "ai_vs_ai";
       const delay = config ? config.delay * 1000 : 2000;
-
-      // Determine if the current turn belongs to a human
       const humanIsPlaying = (mode !== "ai_vs_ai");
       const currentIsHuman = humanIsPlaying && (state.current_color === humanColor);
 
       if (currentIsHuman) {
-        // Human's turn – wait for a board click
         isHumanTurn = true;
-        setTurnDisplay("Your Turn", state.current_color);
+        setTurnDisplay("Your turn — choose a highlighted cell", state.current_color, "human");
+        document.getElementById("board-help").textContent = "Click any highlighted cell to place your disc.";
       } else {
-        // AI's turn – wait `delay` ms then fire the AI move
         isHumanTurn = false;
-        clearTimeout(aiLoopTimeout);
+        const who = getPlayerLabel(state.current_color);
+        setTurnDisplay(who + " is thinking…", state.current_color, "thinking");
+        document.getElementById("board-help").textContent = "The next AI move will appear automatically.";
         aiLoopTimeout = setTimeout(triggerAIMove, delay);
       }
     }
 
-    // ──────────────────────────────────────────────
-    // Ask the server to compute and apply one AI move
     function triggerAIMove() {
       fetch("/api/ai_move", { method: "POST" })
         .then(r => r.json())
@@ -130,11 +179,12 @@
           updateUI(state);
           scheduleNextAction(state);
         })
-        .catch(err => console.error("AI move error:", err));
+        .catch(err => {
+          console.error("AI move error:", err);
+          showToast("AI move failed. Try restarting the match.");
+        });
     }
 
-    // ──────────────────────────────────────────────
-    // Called when the human clicks a cell
     function humanClick(row, col) {
       if (!isHumanTurn || gameOver) return;
 
@@ -146,8 +196,8 @@
       .then(r => r.json())
       .then(state => {
         if (state.error) {
-          // Invalid move – flash the cell
           flashInvalidCell(row, col);
+          showToast("Invalid move. Choose a highlighted cell.");
           return;
         }
         config = state.config;
@@ -155,16 +205,17 @@
         updateUI(state);
         scheduleNextAction(state);
       })
-      .catch(err => console.error("Human move error:", err));
+      .catch(err => {
+        console.error("Human move error:", err);
+        showToast("Could not submit your move.");
+      });
     }
 
-    // ──────────────────────────────────────────────
-    // Render the board and scores from server state
     function updateUI(state) {
       gameOver = state.game_over;
       renderBoard(state.board, state.valid_moves, state.current_color, state.last_move, state.last_move_color);
-      document.getElementById("score-black").textContent = state.scores.black;
-      document.getElementById("score-white").textContent = state.scores.white;
+      updateScores(state);
+      updateMatchMeta(state);
 
       const mode = config ? config.mode : "ai_vs_ai";
       const humanColor = config ? config.human_color : null;
@@ -172,105 +223,258 @@
 
       if (!state.game_over) {
         if (currentIsHuman) {
-          setTurnDisplay("Your Turn ▼", state.current_color);
+          setTurnDisplay("Your turn — choose a highlighted cell", state.current_color, "human");
         } else {
-          const label = state.current_color === BLACK ? "Black (AI2)" : "White (AI1)";
-          setTurnDisplay(label + " thinking…", state.current_color);
+          setTurnDisplay(getPlayerLabel(state.current_color) + " is thinking…", state.current_color, "thinking");
+        }
+      }
+    }
+
+    function ensureBoardInitialized() {
+      const board = document.getElementById("board");
+      if (board.dataset.ready === "true") return;
+
+      board.innerHTML = "";
+      boardCells = [];
+
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          const cell = document.createElement("button");
+          cell.type = "button";
+          cell.className = "cell";
+          cell.setAttribute("role", "gridcell");
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          cell.setAttribute("aria-label", "Row " + r + ", column " + c);
+          board.appendChild(cell);
+          boardCells.push(cell);
         }
       }
 
-      // Mode tag
-      const modeNames = {
-        ai_vs_ai: "AI1 vs AI2",
-        human_vs_ai1: "Human vs AI1",
-        human_vs_ai2: "Human vs AI2",
-      };
-      const el = document.getElementById("mode-tag");
-      if (el && config) el.textContent = "Mode: " + (modeNames[config.mode] || config.mode);
+      board.dataset.ready = "true";
+    }
+
+    function cloneGrid(grid) {
+      return grid.map(row => row.slice());
+    }
+
+    function getCell(row, col) {
+      return boardCells[row * 9 + col];
+    }
+
+    function setStaticPieceAppearance(pieceEl, pieceValue) {
+      pieceEl.classList.remove("black-piece", "white-piece", "place-pop", "flip-black-to-white", "flip-white-to-black");
+      pieceEl.style.animationDelay = "0ms";
+      if (pieceValue === BLACK) pieceEl.classList.add("black-piece");
+      if (pieceValue === WHITE) pieceEl.classList.add("white-piece");
+    }
+
+    function ensurePieceElement(cell) {
+      let pieceEl = cell.querySelector(".piece");
+      if (!pieceEl) {
+        pieceEl = document.createElement("span");
+        pieceEl.className = "piece";
+        pieceEl.setAttribute("aria-hidden", "true");
+        cell.appendChild(pieceEl);
+      }
+      return pieceEl;
+    }
+
+    function removePieceElement(cell) {
+      const pieceEl = cell.querySelector(".piece");
+      if (pieceEl) pieceEl.remove();
+    }
+
+    function animatePlacedPiece(cell, pieceValue, delayMs = 0) {
+      const pieceEl = ensurePieceElement(cell);
+      setStaticPieceAppearance(pieceEl, pieceValue);
+      void pieceEl.offsetWidth;
+      pieceEl.style.animationDelay = delayMs + "ms";
+      pieceEl.classList.add("place-pop");
+    }
+
+    function animateFlippedPiece(cell, oldValue, newValue, delayMs = 0) {
+      const pieceEl = ensurePieceElement(cell);
+      setStaticPieceAppearance(pieceEl, newValue);
+      void pieceEl.offsetWidth;
+      pieceEl.style.animationDelay = delayMs + "ms";
+      pieceEl.classList.add(oldValue === BLACK ? "flip-black-to-white" : "flip-white-to-black");
     }
 
     function renderBoard(grid, validMoves, currentColor, lastMove, lastMoveColor) {
-      const board = document.getElementById("board");
-      board.innerHTML = "";
+      ensureBoardInitialized();
 
       const validSet = new Set(validMoves.map(([r, c]) => r + "," + c));
       const humanColor = config ? config.human_color : null;
       const mode = config ? config.mode : "ai_vs_ai";
       const currentIsHuman = (mode !== "ai_vs_ai") && (currentColor === humanColor);
       const lastKey = lastMove ? lastMove[0] + "," + lastMove[1] : null;
+      const isInitialPaint = !previousGrid;
+      let flipIndex = 0;
+      let placeIndex = 0;
 
       for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
-          const cell = document.createElement("div");
-          cell.className = "cell";
+          const cell = getCell(r, c);
+          const key = r + "," + c;
+          const newPiece = grid[r][c];
+          const oldPiece = previousGrid ? previousGrid[r][c] : EMPTY;
 
-          const piece = grid[r][c];
-          if (piece === BLACK) {
-            cell.innerHTML = '<div class="piece black-piece"></div>';
-          } else if (piece === WHITE) {
-            cell.innerHTML = '<div class="piece white-piece"></div>';
+          cell.classList.remove("valid-move", "last-move", "invalid-flash");
+          cell.onclick = null;
+          cell.title = "";
+          cell.tabIndex = -1;
+          cell.setAttribute("aria-label", "Row " + r + ", column " + c);
+
+          if (newPiece === EMPTY) {
+            removePieceElement(cell);
+          } else if (isInitialPaint || oldPiece === newPiece) {
+            const pieceEl = ensurePieceElement(cell);
+            setStaticPieceAppearance(pieceEl, newPiece);
+          } else if (oldPiece === EMPTY) {
+            animatePlacedPiece(cell, newPiece, placeIndex * 35);
+            placeIndex += 1;
+          } else {
+            animateFlippedPiece(cell, oldPiece, newPiece, flipIndex * 55);
+            flipIndex += 1;
           }
 
-          // Highlight valid moves only when it's the human's turn
-          if (currentIsHuman && validSet.has(r + "," + c) && !gameOver) {
+          if (currentIsHuman && validSet.has(key) && !gameOver) {
             cell.classList.add("valid-move");
+            cell.setAttribute("aria-label", "Valid move at row " + r + ", column " + c);
             cell.onclick = () => humanClick(r, c);
+            cell.tabIndex = 0;
           }
 
-          // Mark the last move with a glowing dot indicator
-          if (lastKey && r + "," + c === lastKey) {
+          if (lastKey && key === lastKey) {
             cell.classList.add("last-move");
-            // Tooltip showing who played there
             const who = lastMoveColor === BLACK ? "Black" : "White";
             cell.title = who + " played here";
           }
-
-          board.appendChild(cell);
         }
+      }
+
+      previousGrid = cloneGrid(grid);
+    }
+
+    function updateScores(state) {
+      const black = state.scores.black;
+      const white = state.scores.white;
+      const total = Math.max(black + white, 1);
+      const blackPercent = (black / total) * 100;
+      const whitePercent = (white / total) * 100;
+
+      document.getElementById("score-black").textContent = black;
+      document.getElementById("score-white").textContent = white;
+      document.getElementById("score-summary").textContent = "Black " + black + " · White " + white;
+      document.getElementById("black-fill").style.width = blackPercent + "%";
+      document.getElementById("white-fill").style.width = whitePercent + "%";
+      document.getElementById("filled-count").textContent = (black + white) + " / 81";
+      document.getElementById("valid-count").textContent = state.valid_moves.length;
+
+      document.getElementById("black-card").classList.toggle("leading", black > white);
+      document.getElementById("white-card").classList.toggle("leading", white > black);
+    }
+
+    function updateMatchMeta(state) {
+      const modeNames = {
+        ai_vs_ai: "AI1 vs AI2",
+        human_vs_ai1: "Human vs AI1",
+        human_vs_ai2: "Human vs AI2",
+      };
+      const mode = config ? config.mode : "ai_vs_ai";
+      const delay = config ? Number(config.delay).toFixed(1) : "2.0";
+      const humanColor = config ? config.human_color : null;
+
+      document.getElementById("mode-tag").textContent = modeNames[mode] || mode;
+      document.getElementById("delay-tag").textContent = delay + "s";
+
+      document.getElementById("black-player-name").textContent = getPlayerName(BLACK, mode, humanColor);
+      document.getElementById("white-player-name").textContent = getPlayerName(WHITE, mode, humanColor);
+
+      if (state.last_move) {
+        const who = state.last_move_color === BLACK ? "Black" : "White";
+        document.getElementById("last-move-text").textContent = who + " at (" + state.last_move[0] + ", " + state.last_move[1] + ")";
+      } else {
+        document.getElementById("last-move-text").textContent = "No moves yet";
       }
     }
 
-    function setTurnDisplay(text, color) {
+    function getPlayerName(color, mode, humanColor) {
+      if (mode !== "ai_vs_ai" && color === humanColor) return "You";
+      if (color === BLACK) return "AI2";
+      return "AI1";
+    }
+
+    function getPlayerLabel(color) {
+      const mode = config ? config.mode : "ai_vs_ai";
+      const humanColor = config ? config.human_color : null;
+      return (color === BLACK ? "Black" : "White") + " (" + getPlayerName(color, mode, humanColor) + ")";
+    }
+
+    function setTurnDisplay(text, color, stateClass = "") {
       const el = document.getElementById("turn-display");
       el.textContent = text;
-      el.className = "turn-indicator " + (color === BLACK ? "turn-black" : "turn-white");
+      el.className = "turn-indicator " + (color === BLACK ? "turn-black" : "turn-white") + " " + stateClass;
+      document.getElementById("black-card").classList.toggle("active-player", color === BLACK && !gameOver);
+      document.getElementById("white-card").classList.toggle("active-player", color === WHITE && !gameOver);
     }
 
     function showWinner(winnerColor) {
       const banner = document.getElementById("winner-banner");
-      const name = winnerColor === BLACK ? "⚫ Black" : "⚪ White";
-      banner.textContent = "🏆 " + name + " Wins!";
-      banner.className = "winner-banner " + (winnerColor === BLACK ? "win-black" : "win-white");
+      if (!winnerColor) {
+        banner.textContent = "🤝 Draw Match";
+        banner.className = "winner-banner win-draw";
+        setTurnDisplay("Game over — draw", BLACK, "finished");
+      } else {
+        const name = winnerColor === BLACK ? "Black" : "White";
+        const player = getPlayerName(winnerColor, config ? config.mode : "ai_vs_ai", config ? config.human_color : null);
+        banner.textContent = "🏆 " + name + " wins — " + player;
+        banner.className = "winner-banner " + (winnerColor === BLACK ? "win-black" : "win-white");
+        setTurnDisplay("Game over — " + name + " wins", winnerColor, "finished");
+      }
       banner.classList.remove("hidden");
-      setTurnDisplay("Game Over", winnerColor);
+      document.getElementById("board-help").textContent = "Match complete. Restart to play again with the same setup.";
     }
 
     function flashInvalidCell(row, col) {
-      // Briefly flash red to signal invalid click
-      const cells = document.querySelectorAll(".cell");
-      const idx = row * 9 + col;
-      if (cells[idx]) {
-        cells[idx].classList.add("invalid-flash");
-        setTimeout(() => cells[idx].classList.remove("invalid-flash"), 500);
+      const cell = getCell(row, col);
+      if (cell) {
+        cell.classList.add("invalid-flash");
+        setTimeout(() => cell.classList.remove("invalid-flash"), 500);
       }
     }
 
-    // ──────────────────────────────────────────────
-    // Restart with same settings
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
     function restartGame() {
       clearTimeout(aiLoopTimeout);
       isHumanTurn = false;
       gameOver = false;
+      previousGrid = null;
       document.getElementById("winner-banner").classList.add("hidden");
 
       fetch("/api/restart", { method: "POST" })
         .then(r => r.json())
         .then(state => {
+          if (state.error) {
+            window.location.href = "/";
+            return;
+          }
           config = state.config;
           updateUI(state);
           scheduleNextAction(state);
+          showToast("Match restarted.");
         })
-        .catch(err => console.error("Restart error:", err));
+        .catch(err => {
+          console.error("Restart error:", err);
+          showToast("Could not restart the match.");
+        });
     }
   </script>
 </body>
