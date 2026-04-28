@@ -5,6 +5,7 @@
 # Alpha-Beta pruning cuts off branches that can't affect the final decision,
 # making the search significantly faster without changing the result.
 
+import time
 from game.board import BLACK, WHITE
 from game.rules import get_valid_moves, apply_move, is_game_over, has_valid_moves
 from algorithms.heuristic import evaluate_board
@@ -25,7 +26,7 @@ def combined_evaluate(board, color):
     return 0.6 * heuristic_score + 0.4 * fuzzy_score
 
 
-def minimax(board, depth, alpha, beta, maximizing, ai_color):
+def minimax(board, depth, alpha, beta, maximizing, ai_color, deadline=None):
     """
     Minimax with Alpha-Beta pruning.
 
@@ -42,6 +43,10 @@ def minimax(board, depth, alpha, beta, maximizing, ai_color):
     opp_color = WHITE if ai_color == BLACK else BLACK
 
     # --- Base cases ---
+    # Time check: cooperative timeout support
+    if deadline is not None and time.perf_counter() > deadline:
+        raise TimeoutError()
+
     if depth == 0 or is_game_over(board):
         return combined_evaluate(board, ai_color)
 
@@ -64,7 +69,7 @@ def minimax(board, depth, alpha, beta, maximizing, ai_color):
             # Simulate the move on a copy of the board
             board_copy = board.copy()
             apply_move(board_copy, r, c, current_color)
-            score = minimax(board_copy, depth - 1, alpha, beta, False, ai_color)
+            score = minimax(board_copy, depth - 1, alpha, beta, False, ai_color, deadline)
             best_score = max(best_score, score)
             alpha = max(alpha, score)
             if beta <= alpha:
@@ -76,7 +81,7 @@ def minimax(board, depth, alpha, beta, maximizing, ai_color):
         for (r, c) in moves:
             board_copy = board.copy()
             apply_move(board_copy, r, c, current_color)
-            score = minimax(board_copy, depth - 1, alpha, beta, True, ai_color)
+            score = minimax(board_copy, depth - 1, alpha, beta, True, ai_color, deadline)
             best_score = min(best_score, score)
             beta = min(beta, score)
             if beta <= alpha:
@@ -84,7 +89,7 @@ def minimax(board, depth, alpha, beta, maximizing, ai_color):
         return best_score
 
 
-def get_best_move(board, color, depth=DEFAULT_DEPTH):
+def get_best_move(board, color, depth=DEFAULT_DEPTH, time_budget=None):
     """
     Find and return the best move (row, col) for `color` using Minimax.
     Tries every valid move, runs minimax on each, picks the highest scoring one.
@@ -96,13 +101,44 @@ def get_best_move(board, color, depth=DEFAULT_DEPTH):
     best_move = None
     best_score = float('-inf')
 
-    for (r, c) in moves:
-        board_copy = board.copy()
-        apply_move(board_copy, r, c, color)
-        # After the AI moves, it's the opponent's turn (minimizing=False)
-        score = minimax(board_copy, depth - 1, float('-inf'), float('inf'), False, color)
-        if score > best_score:
-            best_score = score
-            best_move = (r, c)
+    # If no time budget is given, run the original behaviour once
+    if time_budget is None:
+        for (r, c) in moves:
+            board_copy = board.copy()
+            apply_move(board_copy, r, c, color)
+            score = minimax(board_copy, depth - 1, float('-inf'), float('inf'), False, color)
+            if score > best_score:
+                best_score = score
+                best_move = (r, c)
+        return best_move
 
-    return best_move
+    # Iterative deepening with cooperative timeout support
+    start = time.perf_counter()
+    deadline = start + time_budget
+    last_completed_move = None
+
+    # Increase depth gradually and keep the last fully completed result
+    for d in range(1, depth + 1):
+        try:
+            best_move_this_depth = None
+            best_score_this_depth = float('-inf')
+
+            for (r, c) in moves:
+                # Check time before evaluating each top-level move
+                if time.perf_counter() > deadline:
+                    raise TimeoutError()
+
+                board_copy = board.copy()
+                apply_move(board_copy, r, c, color)
+                score = minimax(board_copy, d - 1, float('-inf'), float('inf'), False, color, deadline)
+                if score > best_score_this_depth:
+                    best_score_this_depth = score
+                    best_move_this_depth = (r, c)
+
+            # Completed this depth without timing out — accept as last completed
+            if best_move_this_depth is not None:
+                last_completed_move = best_move_this_depth
+        except TimeoutError:
+            break
+
+    return last_completed_move if last_completed_move is not None else best_move

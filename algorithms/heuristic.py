@@ -12,7 +12,7 @@ from game.board import BOARD_SIZE, BLACK, WHITE
 # Each cell gets a score based on how strategically important it is.
 # Positive = good for the evaluated player.
 POSITION_WEIGHTS = [
-    [100, -20, 10,  5,  5, 10, -20, 100,  100],
+    [100, -20, 10,  5,  5, 10, -20, -20,  100],
     [-20, -40, -5, -5, -5, -5, -40, -20,  -20],
     [ 10,  -5,  1,  1,  1,  1,  -5,  10,   10],
     [  5,  -5,  1,  1,  1,  1,  -5,   5,    5],

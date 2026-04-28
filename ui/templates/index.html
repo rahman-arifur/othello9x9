@@ -154,7 +154,6 @@
 
       const humanColor = config ? config.human_color : null;
       const mode = config ? config.mode : "ai_vs_ai";
-      const delay = config ? config.delay * 1000 : 2000;
       const humanIsPlaying = (mode !== "ai_vs_ai");
       const currentIsHuman = humanIsPlaying && (state.current_color === humanColor);
 
@@ -167,7 +166,7 @@
         const who = getPlayerLabel(state.current_color);
         setTurnDisplay(who + " is thinking…", state.current_color, "thinking");
         document.getElementById("board-help").textContent = "The next AI move will appear automatically.";
-        aiLoopTimeout = setTimeout(triggerAIMove, delay);
+        aiLoopTimeout = setTimeout(triggerAIMove, 0);
       }
     }
 

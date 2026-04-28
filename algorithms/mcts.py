@@ -137,7 +137,7 @@ def _heuristic_choice(moves):
     return moves[-1]  # fallback
 
 
-def _simulate(node, ai_color):
+def _simulate(node, ai_color, deadline=None):
     """
     Step 3 – Simulation (Playout).
     From the given node, play a heuristic-guided game to the end.
@@ -158,6 +158,9 @@ def _simulate(node, ai_color):
     opp = WHITE if ai_color == BLACK else BLACK
 
     while not is_game_over(board):
+        # Cooperative time check: abort this simulation if we've run out of time
+        if deadline is not None and time.perf_counter() > deadline:
+            return None
         moves = get_valid_moves(board, current_color)  # fast direct lookup
         if moves:
             move = _heuristic_choice(moves)  # heuristic-guided, not purely random
@@ -188,7 +191,10 @@ def _backpropagate(node, result):
         node = node.parent
 
 
-def mcts_get_best_move(board, color, simulations=SIMULATIONS):
+import time
+
+
+def mcts_get_best_move(board, color, simulations=SIMULATIONS, time_budget=None):
     """
     Run MCTS for `simulations` iterations and return the best move (row, col).
     Returns None if there are no valid moves.
@@ -200,7 +206,19 @@ def mcts_get_best_move(board, color, simulations=SIMULATIONS):
     # Create the root node for the current board state
     root = MCTSNode(board.copy(), color)
 
-    for _ in range(simulations):
+    start = time.perf_counter()
+    deadline = start + time_budget if time_budget is not None else None
+
+    # Run either a fixed number of simulations or until time budget expires
+    i = 0
+    while True:
+        # Stop if we've reached the time budget
+        if deadline is not None and time.perf_counter() > deadline:
+            break
+        # Stop if we've reached the fixed simulation count (and no time budget)
+        if time_budget is None and i >= simulations:
+            break
+        i += 1
         # Step 1: Selection
         node = _select(root)
 
@@ -209,12 +227,16 @@ def mcts_get_best_move(board, color, simulations=SIMULATIONS):
             node = _expand(node)
 
         # Step 3: Simulation
-        result = _simulate(node, color)
+        # Step 3: Simulation (cooperative with deadline)
+        result = _simulate(node, color, deadline=deadline)
+        if result is None:
+            # Simulation was aborted due to time expiry — stop further work
+            break
 
         # Step 4: Backpropagation
         _backpropagate(node, result)
 
-    # After all simulations, pick the most-visited child as the best move
+    # After all simulations (or time expiry), pick the most-visited child as the best move
     if not root.children:
         return random.choice(valid_moves)
 

@@ -40,25 +40,26 @@ def _build_game(mode, human_color, delay):
     delay = max(0.5, min(5.0, float(delay)))  # clamp to 0.5–5.0 s
 
     if mode == "ai_vs_ai":
-        black_player = BlackAI(BLACK)
-        white_player = WhiteAI(WHITE)
+        # Use the configured delay as a per-move time budget for AIs
+        black_player = BlackAI(BLACK, time_limit=delay)
+        white_player = WhiteAI(WHITE, time_limit=delay)
 
     elif mode == "human_vs_ai1":
         # Human vs White AI (AI1)
         if human_color == BLACK:
             black_player = HumanPlayer(BLACK)
-            white_player = WhiteAI(WHITE)
+            white_player = WhiteAI(WHITE, time_limit=delay)
         else:
-            black_player = BlackAI(BLACK)   # AI2 fills the other slot
+            black_player = BlackAI(BLACK, time_limit=delay)   # AI2 fills the other slot
             white_player = HumanPlayer(WHITE)
 
     elif mode == "human_vs_ai2":
         # Human vs Black AI (AI2)
         if human_color == BLACK:
             black_player = HumanPlayer(BLACK)
-            white_player = WhiteAI(WHITE)   # AI1 fills the other slot
+            white_player = WhiteAI(WHITE, time_limit=delay)   # AI1 fills the other slot
         else:
-            black_player = BlackAI(BLACK)
+            black_player = BlackAI(BLACK, time_limit=delay)
             white_player = HumanPlayer(WHITE)
     else:
         raise ValueError(f"Unknown mode: {mode}")
